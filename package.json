@@ -1,0 +1,17 @@
+{
+  "name": "studio-z-site",
+  "version": "1.0.0",
+  "description": "Site Studio Z com backend Node.js e SQLite",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "sqlite3": "^5.1.7"
+  }
+}

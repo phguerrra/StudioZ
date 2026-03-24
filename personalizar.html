@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Personalizar — Studio Z</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:wght@600&family=Pacifico&family=Dancing+Script:wght@600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="index.html" class="logo">Studio <span>Z</span></a>
+        <button type="button" class="nav-toggle" aria-label="Abrir menu">
+          <i class="fas fa-bars"></i>
+        </button>
+        <nav class="main-nav" aria-label="Principal">
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="produtos.html">Produtos</a></li>
+            <li><a href="personalizar.html">Personalizar</a></li>
+            <li><a href="pedidos.html">Meus Pedidos</a></li>
+            <li><a href="login.html" class="nav-cta secondary">Login</a></li>
+            <li><a href="cadastro.html" class="nav-cta">Cadastro</a></li>
+            <li><a href="contato.html">Contato</a></li>
+            <li id="navUserSlot"></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main class="form-page">
+      <section class="page-hero" style="padding-bottom: 0">
+        <div class="container">
+          <h1>Personalize seu produto</h1>
+          <p>Preencha os dados, envie sua imagem e gere a prévia antes de finalizar.</p>
+        </div>
+      </section>
+
+      <div class="container">
+        <div class="personalize-layout">
+          <form id="personalizeForm" class="form-card wide" novalidate>
+            <div class="form-group">
+              <label for="productSelect">Produto</label>
+              <select id="productSelect" name="product">
+                <option value="caneca">Caneca personalizada</option>
+                <option value="copo_termico">Copo térmico</option>
+                <option value="garrafa">Garrafa térmica</option>
+                <option value="copo_pers">Copo personalizado</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="diameter">Diâmetro (cm)</label>
+                <input type="number" id="diameter" name="diameter" min="1" max="30" step="0.1" value="8" />
+                <span class="form-hint">Influencia o valor estimado.</span>
+              </div>
+              <div class="form-group">
+                <label for="height">Altura (cm)</label>
+                <input type="number" id="height" name="height" min="1" max="40" step="0.1" value="10" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="productColor">Cor do produto</label>
+              <input type="color" id="productColor" name="color" value="#cbd5e1" />
+            </div>
+
+            <div class="form-group" id="imageUploadGroup">
+              <label for="imageUpload">Imagem (PNG, JPG ou WebP — máx. 4 MB)</label>
+              <input type="file" id="imageUpload" name="image" accept="image/png,image/jpeg,image/webp" />
+              <span class="error-msg">Envie uma imagem válida.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="customText">Texto na peça</label>
+              <textarea id="customText" name="text" rows="3" maxlength="200" placeholder="Sua frase ou nome"></textarea>
+              <span class="error-msg">Texto muito longo.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="fontSelect">Fonte do texto</label>
+              <select id="fontSelect" name="font">
+                <option value="Outfit">Outfit (moderna)</option>
+                <option value="Playfair Display">Playfair (elegante)</option>
+                <option value="Pacifico">Pacifico (casual)</option>
+                <option value="Dancing Script">Dancing Script (manuscrita)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="positionSelect">Posição da arte</label>
+              <select id="positionSelect" name="position">
+                <option value="center">Centro</option>
+                <option value="left">Esquerda</option>
+                <option value="right">Direita</option>
+              </select>
+            </div>
+
+            <div class="form-row" style="margin-top: 0.5rem">
+              <button type="button" id="btnPreview" class="btn btn-blue" style="width: 100%">
+                <i class="fas fa-eye"></i> Gerar Prévia
+              </button>
+              <button type="button" id="btnFinalize" class="btn btn-pink" style="width: 100%">
+                <i class="fas fa-check"></i> Finalizar Pedido
+              </button>
+            </div>
+          </form>
+
+          <aside class="preview-panel">
+            <h3><i class="fas fa-mug-hot" style="color: var(--pink)"></i> Pré-visualização</h3>
+            <canvas id="previewCanvas" width="320" height="360" aria-label="Prévia da caneca"></canvas>
+            <p class="form-hint" style="text-align: center">
+              Simulação ilustrativa — o resultado final pode variar conforme o produto escolhido.
+            </p>
+            <div class="price-box">
+              <div class="label">Valor estimado</div>
+              <div class="value" id="priceValue">R$ 0,00</div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <div class="logo">Studio <span>Z</span></div>
+            <p>Personalização de produtos térmicos com qualidade e criatividade.</p>
+          </div>
+          <div class="footer-col">
+            <h4>Contato</h4>
+            <p><i class="fas fa-phone" style="color: var(--blue)"></i> (11) 99999-0000</p>
+            <p><i class="fas fa-envelope" style="color: var(--pink)"></i> contato@studioz.com.br</p>
+          </div>
+          <div class="footer-col">
+            <h4>Redes</h4>
+            <div class="social-links">
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram"
+                ><i class="fab fa-instagram"></i
+              ></a>
+              <a href="https://wa.me/5511999990000" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"
+                ><i class="fab fa-whatsapp"></i
+              ></a>
+            </div>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          © <span id="year"></span> Studio Z. Todos os direitos reservados.
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/orders.js"></script>
+    <script src="js/personalizar.js"></script>
+    <script src="js/nav-user.js"></script>
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+  </body>
+</html>

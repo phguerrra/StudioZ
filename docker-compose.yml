@@ -1,0 +1,18 @@
+services:
+  studioz:
+    build: .
+    image: studio-z:latest
+    ports:
+      - "3000:3000"
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "3000"
+      DATA_DIR: /app/data
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@studioz.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+    volumes:
+      - studioz-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  studioz-data:

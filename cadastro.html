@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro — Studio Z</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="index.html" class="logo">Studio <span>Z</span></a>
+        <button type="button" class="nav-toggle" aria-label="Abrir menu">
+          <i class="fas fa-bars"></i>
+        </button>
+        <nav class="main-nav" aria-label="Principal">
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="produtos.html">Produtos</a></li>
+            <li><a href="personalizar.html">Personalizar</a></li>
+            <li><a href="pedidos.html">Meus Pedidos</a></li>
+            <li><a href="login.html" class="nav-cta secondary">Login</a></li>
+            <li><a href="cadastro.html" class="nav-cta">Cadastro</a></li>
+            <li><a href="contato.html">Contato</a></li>
+            <li id="navUserSlot"></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main class="form-page">
+      <section class="page-hero">
+        <div class="container">
+          <h1>Criar conta</h1>
+          <p>Cadastre-se para salvar pedidos e acompanhar o status da produção.</p>
+        </div>
+      </section>
+
+      <div class="container">
+        <form id="cadastroForm" class="form-card" novalidate>
+          <div class="form-group">
+            <label for="name">Nome completo</label>
+            <input type="text" id="name" name="name" autocomplete="name" required />
+            <span class="error-msg">Informe seu nome.</span>
+          </div>
+          <div class="form-group">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" autocomplete="email" required />
+            <span class="error-msg">E-mail inválido.</span>
+          </div>
+          <div class="form-group">
+            <label for="password">Senha</label>
+            <input type="password" id="password" name="password" autocomplete="new-password" required />
+            <span class="error-msg">Mínimo 6 caracteres.</span>
+          </div>
+          <div class="form-group">
+            <label for="confirmPassword">Confirmar senha</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              autocomplete="new-password"
+              required
+            />
+            <span class="error-msg">As senhas não coincidem.</span>
+          </div>
+          <button type="submit" class="btn btn-pink btn-block"><i class="fas fa-user-plus"></i> Cadastrar</button>
+          <p class="link-muted">Já tem conta? <a href="login.html">Entrar</a></p>
+        </form>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <div class="logo">Studio <span>Z</span></div>
+            <p>Personalização de produtos térmicos com qualidade e criatividade.</p>
+          </div>
+          <div class="footer-col">
+            <h4>Contato</h4>
+            <p><i class="fas fa-phone" style="color: var(--blue)"></i> (11) 99999-0000</p>
+            <p><i class="fas fa-envelope" style="color: var(--pink)"></i> contato@studioz.com.br</p>
+          </div>
+          <div class="footer-col">
+            <h4>Redes</h4>
+            <div class="social-links">
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram"
+                ><i class="fab fa-instagram"></i
+              ></a>
+              <a href="https://wa.me/5511999990000" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"
+                ><i class="fab fa-whatsapp"></i
+              ></a>
+            </div>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          © <span id="year"></span> Studio Z. Todos os direitos reservados.
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cadastro-page.js"></script>
+    <script src="js/nav-user.js"></script>
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+  </body>
+</html>
