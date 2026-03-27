@@ -70,17 +70,10 @@ Fluxo do sistema:
 8. O cliente acompanha o status
 
 ---
+## 🌐 Demonstração do Sistema
 
-## Como Executar o Projeto
-
-### Usando Docker
-
-bash
-docker-compose up --build
-
-Depois acesse no navegador:
-
-http://localhost:8080
+O sistema pode ser acessado online pelo GitHub Pages:
+https://phguerrra.github.io/StudioZ/
 
 ## Objetivo do Projeto
 
