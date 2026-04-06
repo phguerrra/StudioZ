@@ -4,6 +4,26 @@ const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
 
 const app = express();
+
+// Three.js (WebGL) usa compilação de shader via mecanismos que o CSP trata como "eval".
+// Sem 'unsafe-eval' em script-src, o renderer pode falhar e a prévia 3D não aparece.
+// CDNs: Three (import map) em cdn.jsdelivr.net; Font Awesome em cdnjs.
+const STUDIOZ_CSP = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com",
+  "font-src 'self' https://fonts.gstatic.com data:",
+  "img-src 'self' data: blob: https:",
+  "connect-src 'self'",
+].join("; ");
+
+app.use(function setContentSecurityPolicy(req, res, next) {
+  res.setHeader("Content-Security-Policy", STUDIOZ_CSP);
+  next();
+});
+
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || "0.0.0.0";
 const dataDir = process.env.DATA_DIR || __dirname;
@@ -18,7 +38,15 @@ const adminTokens = new Set();
 
 app.use(express.json({ limit: "8mb" }));
 app.use(express.urlencoded({ extended: false }));
-app.use(express.static(__dirname));
+app.use(
+  express.static(__dirname, {
+    setHeaders(res, filePath) {
+      if (filePath.endsWith(".html")) {
+        res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+      }
+    },
+  })
+);
 
 function run(sql, params = []) {
   return new Promise((resolve, reject) => {

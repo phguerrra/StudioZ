@@ -515,7 +515,10 @@ a:hover {
 #previewCanvas {
   width: 100%;
   max-width: 280px;
+  /* Evita altura 0 antes do layout / com buffer WebGL — rect precisa ser > 0 pro Three.js */
+  aspect-ratio: 320 / 360;
   height: auto;
+  min-height: 200px;
   display: block;
   margin: 0 auto 1rem;
   border-radius: 12px;

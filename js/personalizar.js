@@ -1,3 +1,6 @@
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
 (function () {
   "use strict";
 
@@ -24,6 +27,345 @@
   }
 
   var uploadedImage = null;
+
+  var THREE_TEXTURE_W = 1024;
+  var THREE_TEXTURE_H = 512;
+
+  var threePreview = {
+    initialized: false,
+    renderer: null,
+    scene: null,
+    camera: null,
+    controls: null,
+    cylinderMesh: null,
+    cylinderMaterial: null,
+    textureCanvas: null,
+    textureCtx: null,
+    texture: null,
+    animId: null,
+    lastGeometryKey: ""
+  };
+
+  function getCurrentFormState() {
+    var productEl = document.getElementById("productSelect");
+    var diameterEl = document.getElementById("diameter");
+    var heightEl = document.getElementById("height");
+    var colorEl = document.getElementById("productColor");
+    var textEl = document.getElementById("customText");
+    var fontEl = document.getElementById("fontSelect");
+    var positionEl = document.getElementById("positionSelect");
+
+    return {
+      productKey: productEl ? productEl.value : "caneca",
+      diameterCm: diameterEl ? parseNum(diameterEl, 8) : 8,
+      heightCm: heightEl ? parseNum(heightEl, 10) : 10,
+      color: colorEl && colorEl.value ? colorEl.value : "#cbd5e1",
+      text: textEl && textEl.value ? textEl.value : "",
+      fontFamily: fontEl && fontEl.value ? fontEl.value : "Outfit",
+      position: positionEl && positionEl.value ? positionEl.value : "center",
+      image: uploadedImage
+    };
+  }
+
+  function getShapeMultipliers(productKey) {
+    // Multiplicadores para criar "silhuetas" diferentes.
+    // Mantemos o cálculo simples e ainda respeitamos os inputs de diâmetro/altura.
+    var m = {
+      radiusMul: 1,
+      heightMul: 1
+    };
+    if (productKey === "caneca") {
+      m.radiusMul = 1.15;
+      m.heightMul = 0.9;
+    } else if (productKey === "copo_termico") {
+      m.radiusMul = 1.02;
+      m.heightMul = 1.03;
+    } else if (productKey === "garrafa") {
+      m.radiusMul = 0.72;
+      m.heightMul = 1.35;
+    } else if (productKey === "copo_pers") {
+      m.radiusMul = 0.86;
+      m.heightMul = 1.0;
+    }
+    return m;
+  }
+
+  function hexToNumber(hex) {
+    if (!hex) return 0xffffff;
+    var s = String(hex).trim();
+    if (s[0] === "#") s = s.slice(1);
+    // aceita #rgb ou #rrggbb
+    if (s.length === 3) s = s[0] + s[0] + s[1] + s[1] + s[2] + s[2];
+    var n = parseInt(s, 16);
+    return isNaN(n) ? 0xffffff : n;
+  }
+
+  function ensureTextureCanvas() {
+    if (threePreview.textureCanvas && threePreview.textureCtx) return;
+    threePreview.textureCanvas = document.createElement("canvas");
+    threePreview.textureCanvas.width = THREE_TEXTURE_W;
+    threePreview.textureCanvas.height = THREE_TEXTURE_H;
+    threePreview.textureCtx = threePreview.textureCanvas.getContext("2d");
+  }
+
+  var PREVIEW_FALLBACK_W = 320;
+  var PREVIEW_FALLBACK_H = 360;
+
+  function readPreviewCssSize(canvas) {
+    var rect = canvas.getBoundingClientRect();
+    var rw = Math.round(rect.width);
+    var rh = Math.round(rect.height);
+    var cw = canvas.clientWidth;
+    var ch = canvas.clientHeight;
+    var attrW = parseInt(canvas.getAttribute("width"), 10) || PREVIEW_FALLBACK_W;
+    var attrH = parseInt(canvas.getAttribute("height"), 10) || PREVIEW_FALLBACK_H;
+
+    // Preferir tamanho já pintado no layout; senão client*; senão atributos HTML.
+    var w = rw > 0 ? rw : cw > 0 ? cw : attrW;
+    var h = rh > 0 ? rh : ch > 0 ? ch : attrH;
+
+    // Se só uma dimensão veio (comum com height:auto antes do reflow), deriva pela proporção do atributo.
+    if (w > 0 && h <= 0) h = Math.round((w * attrH) / attrW);
+    if (h > 0 && w <= 0) w = Math.round((h * attrW) / attrH);
+
+    w = Math.max(1, Math.round(w));
+    h = Math.max(1, Math.round(h));
+    return { w: w, h: h };
+  }
+
+  function resizeThreePreview() {
+    var canvas = document.getElementById("previewCanvas");
+    if (!canvas || !threePreview.renderer || !threePreview.camera) return;
+
+    var size = readPreviewCssSize(canvas);
+    var w = size.w;
+    var h = size.h;
+
+    // Tamanhos w/h são em pixels CSS; setSize aplica devicePixelRatio no buffer WebGL.
+    var dpr = Math.min(typeof window !== "undefined" && window.devicePixelRatio ? window.devicePixelRatio : 1, 2);
+    threePreview.renderer.setPixelRatio(dpr);
+    threePreview.renderer.setSize(w, h, false);
+    threePreview.camera.aspect = w / h;
+    threePreview.camera.updateProjectionMatrix();
+  }
+
+  function initThreePreview() {
+    console.log("🟡 initThreePreview chamado");
+    if (threePreview.initialized) {
+      console.log("⚠️ já inicializado, pulando");
+      return;
+    }
+
+    var canvas = document.getElementById("previewCanvas");
+    console.log("🎨 canvas encontrado:", canvas);
+    if (!canvas) {
+      console.warn("❌ previewCanvas ausente no DOM");
+      return;
+    }
+
+    console.log("📐 canvas size (buffer):", canvas.width, canvas.height);
+    console.log("📐 canvas rect:", canvas.getBoundingClientRect());
+
+    ensureTextureCanvas();
+
+    threePreview.scene = new THREE.Scene();
+    threePreview.renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
+      antialias: true,
+      alpha: true,
+      preserveDrawingBuffer: false
+    });
+    threePreview.renderer.setClearColor(0x000000, 0);
+
+    threePreview.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
+    threePreview.camera.position.set(0, 2, 6);
+
+    // Iluminação suave para destacar textura sem "estourar".
+    var hemi = new THREE.HemisphereLight(0xffffff, 0x94a3b8, 0.9);
+    threePreview.scene.add(hemi);
+
+    var dir = new THREE.DirectionalLight(0xffffff, 0.85);
+    dir.position.set(2.8, 5.2, 3.2);
+    threePreview.scene.add(dir);
+
+    threePreview.cylinderMaterial = new THREE.MeshStandardMaterial({
+      color: hexToNumber(getProductColor()),
+      roughness: 0.6,
+      metalness: 0.05
+    });
+
+    // Geometria inicial (vai ser recalculada conforme diâmetro/altura/produto).
+    threePreview.cylinderMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.8, 0.8, 2.0, 64, 1, true),
+      threePreview.cylinderMaterial
+    );
+    threePreview.cylinderMesh.position.y = 0;
+    threePreview.scene.add(threePreview.cylinderMesh);
+
+    threePreview.controls = new OrbitControls(threePreview.camera, threePreview.renderer.domElement);
+    threePreview.controls.enableDamping = true;
+    threePreview.controls.dampingFactor = 0.08;
+    threePreview.controls.enablePan = false;
+    threePreview.controls.minDistance = 2;
+    threePreview.controls.maxDistance = 20;
+
+    resizeThreePreview();
+    // Primeiro frame pode ter rect 0; segundo layout estabiliza (grid/sticky).
+    requestAnimationFrame(function () {
+      resizeThreePreview();
+    });
+    if (typeof ResizeObserver !== "undefined") {
+      var ro = new ResizeObserver(function () {
+        resizeThreePreview();
+      });
+      ro.observe(canvas);
+    }
+
+    function animate() {
+      threePreview.animId = requestAnimationFrame(animate);
+      if (threePreview.controls) threePreview.controls.update();
+      if (threePreview.renderer && threePreview.scene && threePreview.camera) {
+        threePreview.renderer.render(threePreview.scene, threePreview.camera);
+      }
+    }
+    animate();
+
+    window.addEventListener("resize", function () {
+      resizeThreePreview();
+    });
+
+    threePreview.initialized = true;
+    console.log("✅ initThreePreview concluído (threePreview.initialized = true)");
+  }
+
+  function drawCoverImageToTexture(ctx, img, W, H, position) {
+    // position define "onde" o conteúdo aparece na superfície cilíndrica.
+    var alignX = 0.5;
+    if (position === "left") alignX = 0.25;
+    if (position === "right") alignX = 0.75;
+
+    var iw = img.width;
+    var ih = img.height;
+    if (!iw || !ih) return;
+
+    var scale = Math.max(W / iw, H / ih);
+    var dw = iw * scale;
+    var dh = ih * scale;
+
+    var dx = (W - dw) * alignX;
+    var dy = (H - dh) / 2;
+
+    ctx.drawImage(img, dx, dy, dw, dh);
+  }
+
+  function drawPlaceholderImageToTexture(ctx, W, H) {
+    ctx.fillStyle = "rgba(255,255,255,0.35)";
+    ctx.fillRect(W * 0.12, H * 0.23, W * 0.76, H * 0.28);
+
+    ctx.fillStyle = "#64748b";
+    ctx.font = "13px Outfit, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Envie uma imagem", W / 2, H * 0.23 + (H * 0.28) / 2 - 6);
+    ctx.fillText("para ver aqui", W / 2, H * 0.23 + (H * 0.28) / 2 + 12);
+  }
+
+  function updateTextureFromForm(state) {
+    ensureTextureCanvas();
+    var ctx = threePreview.textureCtx;
+    var W = THREE_TEXTURE_W;
+    var H = THREE_TEXTURE_H;
+
+    // Fundo com a cor do produto (assim o input de cor sempre aparece).
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = state.color;
+    ctx.fillRect(0, 0, W, H);
+
+    if (state.image && state.image.complete) {
+      ctx.save();
+      drawCoverImageToTexture(ctx, state.image, W, H, state.position);
+      ctx.restore();
+    } else {
+      drawPlaceholderImageToTexture(ctx, W, H);
+    }
+
+    // Texto sobreposto (Canvas 2D -> textura no cilindro 3D).
+    var text = (state.text || "").trim();
+    if (text) {
+      var fontSize = Math.round(H * 0.09); // ~46px no padrão
+      var lineHeight = Math.round(fontSize * 1.05);
+      var maxW = W * 0.78;
+
+      ctx.font = "600 " + fontSize + "px '" + state.fontFamily + "', sans-serif";
+      ctx.fillStyle = "#1e293b";
+
+      ctx.textAlign = "center";
+      var x = W / 2;
+      if (state.position === "left") {
+        ctx.textAlign = "left";
+        x = W * 0.12;
+      } else if (state.position === "right") {
+        ctx.textAlign = "right";
+        x = W * 0.88;
+      }
+
+      var y = H * 0.74; // perto do "rodapé" do layout
+      wrapText(ctx, text, x, y, maxW, lineHeight);
+    }
+
+    if (!threePreview.texture) {
+      threePreview.texture = new THREE.CanvasTexture(threePreview.textureCanvas);
+      // Compatibilidade com versões diferentes do Three.
+      if (THREE.SRGBColorSpace) threePreview.texture.colorSpace = THREE.SRGBColorSpace;
+      threePreview.texture.flipY = true;
+      // wrapS precisa "repetir" ao redor do cilindro.
+      threePreview.texture.wrapS = THREE.RepeatWrapping;
+      threePreview.texture.wrapT = THREE.ClampToEdgeWrapping;
+      threePreview.texture.repeat.set(1, 1);
+      threePreview.texture.needsUpdate = true;
+    } else {
+      threePreview.texture.needsUpdate = true;
+    }
+
+    if (threePreview.cylinderMaterial) {
+      threePreview.cylinderMaterial.map = threePreview.texture;
+      threePreview.cylinderMaterial.color.set(hexToNumber(state.color));
+      threePreview.cylinderMaterial.needsUpdate = true;
+    }
+  }
+
+  function updateGeometryFromForm(state) {
+    if (!threePreview.cylinderMesh) return;
+
+    var multipliers = getShapeMultipliers(state.productKey);
+    var cmToWorld = 0.2;
+
+    var radiusCm = state.diameterCm / 2;
+    var radiusWorld = Math.max(0.08, radiusCm * multipliers.radiusMul * cmToWorld);
+    var heightWorld = Math.max(0.08, state.heightCm * multipliers.heightMul * cmToWorld);
+
+    // Chave para evitar recriar geometria em updates pequenos.
+    var geometryKey = [state.productKey, radiusWorld.toFixed(3), heightWorld.toFixed(3)].join("|");
+    if (threePreview.lastGeometryKey !== geometryKey) {
+      threePreview.lastGeometryKey = geometryKey;
+
+      var geom = new THREE.CylinderGeometry(radiusWorld, radiusWorld, heightWorld, 64, 1, true);
+      if (threePreview.cylinderMesh.geometry) threePreview.cylinderMesh.geometry.dispose();
+      threePreview.cylinderMesh.geometry = geom;
+    }
+
+    // Ajusta câmera para caber no cilindro.
+    var cameraDist = radiusWorld * 5 + 2.1;
+    threePreview.camera.position.set(0, heightWorld * 0.42, cameraDist);
+    if (threePreview.controls && threePreview.controls.target) {
+      threePreview.controls.target.set(0, 0, 0);
+    }
+
+    // Visual inicial coerente com a posição escolhida.
+    var rot = 0;
+    if (state.position === "left") rot = Math.PI / 6;
+    if (state.position === "right") rot = -Math.PI / 6;
+    if (threePreview.cylinderMesh) threePreview.cylinderMesh.rotation.y = rot;
+  }
 
   function parseNum(el, fallback) {
     var v = parseFloat(el && el.value);
@@ -55,92 +397,19 @@
   }
 
   function drawMugPreview() {
-    var canvas = document.getElementById("previewCanvas");
-    var ctx = canvas ? canvas.getContext("2d") : null;
-    if (!canvas || !ctx) return;
-    var w = (canvas.width = 320);
-    var h = (canvas.height = 360);
-    ctx.clearRect(0, 0, w, h);
-
-    var cx = w / 2;
-    var mugW = 140;
-    var mugH = 180;
-    var mugX = cx - mugW / 2;
-    var mugY = 60;
-
-    ctx.fillStyle = getProductColor();
-    ctx.beginPath();
-    ctx.roundRect(mugX, mugY, mugW, mugH, 12);
-    ctx.fill();
-
-    ctx.strokeStyle = "rgba(0,0,0,0.12)";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    var imgAreaX = mugX + 15;
-    var imgAreaY = mugY + 25;
-    var imgAreaW = mugW - 30;
-    var imgAreaH = 95;
-
-    if (uploadedImage && uploadedImage.complete) {
-      ctx.save();
-      ctx.beginPath();
-      ctx.roundRect(imgAreaX, imgAreaY, imgAreaW, imgAreaH, 8);
-      ctx.clip();
-      var ir = uploadedImage.width / uploadedImage.height;
-      var boxr = imgAreaW / imgAreaH;
-      var dw, dh, ox, oy;
-      if (ir > boxr) {
-        dh = imgAreaH;
-        dw = dh * ir;
-        ox = imgAreaX + (imgAreaW - dw) / 2;
-        oy = imgAreaY;
-      } else {
-        dw = imgAreaW;
-        dh = dw / ir;
-        ox = imgAreaX;
-        oy = imgAreaY + (imgAreaH - dh) / 2;
-      }
-      ctx.drawImage(uploadedImage, ox, oy, dw, dh);
-      ctx.restore();
-    } else {
-      ctx.fillStyle = "rgba(255,255,255,0.35)";
-      ctx.fillRect(imgAreaX, imgAreaY, imgAreaW, imgAreaH);
-      ctx.fillStyle = "#64748b";
-      ctx.font = "13px Outfit, sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("Envie uma imagem", cx, imgAreaY + imgAreaH / 2 - 6);
-      ctx.fillText("para ver aqui", cx, imgAreaY + imgAreaH / 2 + 12);
+    console.log("🖼️ drawMugPreview chamado");
+    // Mantém o nome antigo para não quebrar a integração existente no formulário.
+    initThreePreview();
+    console.log("🔧 three initialized:", threePreview.initialized);
+    var state = getCurrentFormState();
+    if (!threePreview.initialized) {
+      console.warn("⛔ drawMugPreview abortado: Three não inicializou (veja erros de import map / módulo no console)");
+      return;
     }
 
-    var text = (document.getElementById("customText") && document.getElementById("customText").value) || "";
-    var fontSel = document.getElementById("fontSelect");
-    var fontFamily = fontSel ? fontSel.value : "Outfit";
-    var pos = document.getElementById("positionSelect") ? document.getElementById("positionSelect").value : "center";
-
-    ctx.font = "600 14px '" + fontFamily + "', sans-serif";
-    ctx.fillStyle = "#1e293b";
-    var textY = mugY + mugH - 28;
-    var textX = cx;
-    ctx.textAlign = "center";
-    if (pos === "left") {
-      ctx.textAlign = "left";
-      textX = mugX + 18;
-    } else if (pos === "right") {
-      ctx.textAlign = "right";
-      textX = mugX + mugW - 18;
-    }
-    if (text.trim()) {
-      var maxW = mugW - 24;
-      wrapText(ctx, text.trim(), textX, textY, maxW, 18);
-    }
-
-    ctx.strokeStyle = getProductColor();
-    ctx.lineWidth = 10;
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.arc(mugX + mugW + 5, mugY + mugH / 2, 38, -Math.PI * 0.35, Math.PI * 0.35);
-    ctx.stroke();
+    updateGeometryFromForm(state);
+    updateTextureFromForm(state);
+    console.log("✅ drawMugPreview: geometria + textura OK");
   }
 
   function wrapText(context, text, x, y, maxWidth, lineHeight) {
@@ -322,6 +591,7 @@
       });
 
     loadBasePrices().then(function () {
+      console.log("💰 preços carregados, chamando drawMugPreview");
       updatePriceDisplay();
       drawMugPreview();
     });
