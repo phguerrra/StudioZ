@@ -1,22 +1,34 @@
 package com.studioz.backend.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.awt.*;
+import java.time.Instant;
 
 @Entity
+@Table(name = "products")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Product {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
-    private String name;
-    private String description;
-    private double basePrice;
-    private String imagem;
+    private Long id;
 
+    private String productKey;
 
+    private String productName;
 
+    private Double basePrice;
+
+    private Instant updatedAt;
+
+    @PrePersist
+    @PreUpdate
+    public void updateTimestamp() {
+        updatedAt = Instant.now();
+    }
 }
