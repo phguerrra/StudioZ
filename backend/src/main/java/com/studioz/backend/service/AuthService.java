@@ -14,7 +14,7 @@ public class AuthService {
 
     public User register(RegisterRequest request) {
         if (userRepository.findByEmail(request.email()).isPresent()) {
-            throw new RuntimeException("Email já existe");
+            throw new RuntimeException("E-mail já cadastrado");
         }
         User user = new User();
         user.setEmail(request.email());
@@ -24,10 +24,10 @@ public class AuthService {
 
     public User login(LoginRequest request) {
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new RuntimeException("E-mail ou senha incorretos"));
 
         if (!user.getPassword().equals(request.password())) {
-            throw new RuntimeException("Senha incorreta");
+            throw new RuntimeException("E-mail ou senha incorretos");
         }
 
         return user;

@@ -22,13 +22,15 @@
     }
   };
 
+  var API_BASE_URL = "http://localhost:8080";
+
   async function api(path, method, body) {
     var opts = { method: method || "GET", headers: {} };
     if (body) {
       opts.headers["Content-Type"] = "application/json";
       opts.body = JSON.stringify(body);
     }
-    var res = await fetch(path, opts);
+    var res = await fetch(API_BASE_URL + path, opts);
     var data;
     try {
       data = await res.json();
@@ -38,11 +40,11 @@
     if (!res.ok) {
       return { ok: false, message: data.message || "Erro no servidor." };
     }
-    return data;
+    return { ok: true, user: data };
   }
 
   window.registerUser = async function (name, email, password) {
-    return api("/api/auth/register", "POST", {
+    return api("/auth/register", "POST", {
       name: name.trim(),
       email: email.trim().toLowerCase(),
       password: password,
@@ -50,7 +52,7 @@
   };
 
   window.loginUser = async function (email, password) {
-    var result = await api("/api/auth/login", "POST", {
+    var result = await api("/auth/login", "POST", {
       email: email.trim().toLowerCase(),
       password: password,
     });

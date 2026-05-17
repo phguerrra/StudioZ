@@ -1,9 +1,9 @@
 package com.studioz.backend.repository;
 
-import com.studioz.backend.model.User;
+import com.studioz.backend.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ProductRepository extends JpaRepository<User, Long> {
+public interface ProductRepository extends JpaRepository<Product, Long> {
 }
