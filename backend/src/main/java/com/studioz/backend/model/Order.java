@@ -3,32 +3,34 @@ package com.studioz.backend.model;
 import jakarta.persistence.*;
 
 import java.time.Instant;
-import java.util.Date;
 
 @Entity
-@Table(name="orders")
+@Table(name = "orders")
 public class Order {
         @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long id;
+
         private String userEmail;
         private String userName;
         private String productKey;
         private String productName;
         private Double diameter;
         private Double height;
-        @Column(length = 50)
         private String color;
         @Lob
         private String text;
-        @Column(length = 100)
         private String font;
-        @Column(length = 20)
         private String position;
         @Lob
-        private String imageDataUrl; // or path to image
+        private String imageDataUrl;
         private Double price;
         private String status;
         private Instant createdAt;
+
+        @PrePersist
+        public void prePersist() {
+                if (createdAt == null) createdAt = Instant.now();
+        }
 
         public Long getId() {
                 return id;
@@ -38,20 +40,20 @@ public class Order {
                 this.id = id;
         }
 
-        public String getUserName() {
-                return userName;
-        }
-
-        public void setUserName(String userName) {
-                this.userName = userName;
-        }
-
         public String getUserEmail() {
                 return userEmail;
         }
 
         public void setUserEmail(String userEmail) {
                 this.userEmail = userEmail;
+        }
+
+        public String getUserName() {
+                return userName;
+        }
+
+        public void setUserName(String userName) {
+                this.userName = userName;
         }
 
         public String getProductKey() {
@@ -86,20 +88,20 @@ public class Order {
                 this.height = height;
         }
 
-        public String getColor() {
-                return color;
-        }
-
-        public void setColor(String color) {
-                this.color = color;
-        }
-
         public String getText() {
                 return text;
         }
 
         public void setText(String text) {
                 this.text = text;
+        }
+
+        public String getColor() {
+                return color;
+        }
+
+        public void setColor(String color) {
+                this.color = color;
         }
 
         public String getFont() {
