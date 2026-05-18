@@ -42,4 +42,16 @@ public class OrderService {
     public List<Order> getOrdersByEmail(String email) {
         return orderRepository.findByUserEmailOrderByCreatedAtDesc(email);
     }
+
+    public List<Order> getAllOrders() {
+        return orderRepository.findAll();
+    }
+
+    public Order updateStatus(Long id, String status) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Pedido não encontrado"));
+        order.setStatus(status);
+        return orderRepository.save(order);
+    }
 }
