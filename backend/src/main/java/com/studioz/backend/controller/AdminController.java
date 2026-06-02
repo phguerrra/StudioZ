@@ -14,6 +14,7 @@ import java.util.Map;
 import com.studioz.backend.dto.UpdatePriceDTO;
 import com.studioz.backend.model.Product;
 import com.studioz.backend.service.ProductService;
+import com.studioz.backend.dto.UpdateOrderDTO;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -129,6 +130,51 @@ public class AdminController {
 
         response.put("ok", true);
         response.put("price", product);
+
+        return response;
+    }
+
+    @GetMapping("/orders/{id}")
+    public Map<String, Object> getOrderById(
+            @RequestHeader("X-User-Email") String email,
+            @PathVariable Long id
+    ) {
+
+        validateAdmin(email);
+
+        Order order =
+                orderService.getOrderById(id);
+
+        Map<String, Object> response =
+                new HashMap<>();
+
+        response.put("ok", true);
+        response.put("order", order);
+
+        return response;
+    }
+
+    @PatchMapping("/orders/{id}")
+    public Map<String, Object> updateOrder(
+            @RequestHeader("X-User-Email") String email,
+            @PathVariable Long id,
+            @RequestBody UpdateOrderDTO dto
+    ) {
+
+        validateAdmin(email);
+
+        Order updatedOrder =
+                orderService.updateOrder(
+                        id,
+                        dto.getPrice(),
+                        dto.getStatus()
+                );
+
+        Map<String, Object> response =
+                new HashMap<>();
+
+        response.put("ok", true);
+        response.put("order", updatedOrder);
 
         return response;
     }

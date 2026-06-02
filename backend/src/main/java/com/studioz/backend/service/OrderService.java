@@ -88,4 +88,25 @@ public class OrderService {
 
         return stats;
     }
+
+    public Order getOrderById(Long id) {
+        return orderRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Pedido não encontrado"));
+    }
+
+    public Order updateOrder(Long id, Double price, String status) {
+
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Pedido não encontrado"));
+
+        if (price != null) {
+            order.setPrice(price);
+        }
+        if (status != null && !status.isBlank()) {
+            order.setStatus(status);
+        }
+        return orderRepository.save(order);
+    }
 }
