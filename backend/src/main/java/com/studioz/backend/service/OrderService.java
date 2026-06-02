@@ -6,7 +6,10 @@ import com.studioz.backend.model.Order;
 import com.studioz.backend.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -53,5 +56,36 @@ public class OrderService {
                         new RuntimeException("Pedido não encontrado"));
         order.setStatus(status);
         return orderRepository.save(order);
+    }
+
+    public Map<String, Object> getStats() {
+
+        List<Order> orders = orderRepository.findAll();
+
+        long totalOrders = orders.size();
+
+        long pendingOrders =
+                orderRepository.countByStatus("EM_ANALISE");
+
+        long completedOrders =
+                orderRepository.countByStatus("FINALIZADO");
+
+        double totalRevenue = orders.stream()
+                .mapToDouble(order ->
+                        order.getPrice() != null
+                                ? order.getPrice()
+                                : 0
+                )
+                .sum();
+
+        Map<String, Object> stats =
+                new HashMap<>();
+
+        stats.put("totalOrders", totalOrders);
+        stats.put("pendingOrders", pendingOrders);
+        stats.put("completedOrders", completedOrders);
+        stats.put("totalRevenue", totalRevenue);
+
+        return stats;
     }
 }

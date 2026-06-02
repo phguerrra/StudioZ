@@ -8,8 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.studioz.backend.model.Role;
 import com.studioz.backend.model.User;
-import com.studioz.backend.repository.UserRepository;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +52,26 @@ public class AdminController {
         if (user.getRole() != Role.ADMIN) {
             throw new RuntimeException("Acesso negado");
         }
+    }
+
+    @GetMapping("/stats")
+    public Map<String, Object> getStats(
+            @RequestHeader("X-User-Email") String email
+    ) {
+
+        validateAdmin(email);
+
+        Map<String, Object> stats =
+                orderService.getStats();
+
+        Map<String, Object> response =
+                new HashMap<>();
+
+        response.put("ok", true);
+
+        response.putAll(stats);
+
+        return response;
     }
 
 
