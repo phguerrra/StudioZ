@@ -7,7 +7,8 @@
       opts.headers["Content-Type"] = "application/json";
       opts.body = JSON.stringify(body);
     }
-    var res = await fetch(path, opts);
+    var base = (window.API_BASE_URL || "");
+    var res = await fetch(base + path, opts);
     var data;
     try {
       data = await res.json();

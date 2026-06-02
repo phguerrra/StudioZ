@@ -22,7 +22,8 @@
     }
   };
 
-  var API_BASE_URL = "http://localhost:8080";
+  // expose API base so other modules can call the same backend
+  window.API_BASE_URL = "http://localhost:8080";
 
   async function api(path, method, body) {
     var opts = { method: method || "GET", headers: {} };
@@ -44,8 +45,9 @@
   }
 
   window.registerUser = async function (name, email, password) {
+    // Spring Boot backend expects 'username' field in RegisterRequest
     return api("/auth/register", "POST", {
-      name: name.trim(),
+      username: name.trim(),
       email: email.trim().toLowerCase(),
       password: password,
     });

@@ -34,7 +34,8 @@
     }
 
     try {
-      var res = await fetch("/api/contact", {
+      var base = (window.API_BASE_URL || "");
+      var res = await fetch(base + "/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

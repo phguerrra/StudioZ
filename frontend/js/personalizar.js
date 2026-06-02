@@ -13,7 +13,8 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
   async function loadBasePrices() {
     try {
-      var res = await fetch("/api/prices");
+      var base = (window.API_BASE_URL || "");
+      var res = await fetch(base + "/api/prices");
       var data = await res.json();
       if (!res.ok || !data.ok || !Array.isArray(data.prices)) return;
       data.prices.forEach(function (p) {
