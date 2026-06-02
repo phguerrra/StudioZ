@@ -1,6 +1,5 @@
 package com.studioz.backend.controller;
 
-
 import com.studioz.backend.model.Order;
 import com.studioz.backend.repository.UserRepository;
 import com.studioz.backend.service.ContactService;
@@ -12,6 +11,9 @@ import com.studioz.backend.model.User;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.studioz.backend.dto.UpdatePriceDTO;
+import com.studioz.backend.model.Product;
+import com.studioz.backend.service.ProductService;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -21,6 +23,7 @@ public class AdminController {
     private final OrderService orderService;
     private final UserRepository userRepository;
     private final ContactService contactService;
+    private final ProductService productService;
 
     @GetMapping("/orders")
     public Map<String, Object> getAllOrders(
@@ -88,5 +91,46 @@ public class AdminController {
         return response;
     }
 
+    @GetMapping("/prices")
+    public Map<String, Object> getPrices(
+            @RequestHeader("X-User-Email") String email
+    ) {
+
+        validateAdmin(email);
+
+        Map<String, Object> response =
+                new HashMap<>();
+
+        response.put("ok", true);
+        response.put(
+                "prices",
+                productService.getAllProducts()
+        );
+
+        return response;
+    }
+
+    @PutMapping("/prices/{productKey}")
+    public Map<String, Object> updatePrice(
+            @RequestHeader("X-User-Email") String email,
+            @PathVariable String productKey,
+            @RequestBody UpdatePriceDTO dto
+    ) {
+
+        validateAdmin(email);
+
+        Product product = productService.updatePrice(
+                        productKey,
+                        dto.getBasePrice()
+                );
+
+        Map<String, Object> response =
+                new HashMap<>();
+
+        response.put("ok", true);
+        response.put("price", product);
+
+        return response;
+    }
 
 }

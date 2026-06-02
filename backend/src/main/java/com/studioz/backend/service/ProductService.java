@@ -23,6 +23,14 @@ public class ProductService {
         return productRepository.save(product);
     }
 
+    public Product updatePrice(String productKey, Double newPrice) {
+        Product product = productRepository
+                .findByProductKey(productKey)
+                .orElseThrow(() ->
+                        new RuntimeException("Produto não encontrado"));
+        product.setBasePrice(newPrice);
+        return productRepository.save(product);
+    }
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
