@@ -3,6 +3,7 @@ package com.studioz.backend.controller;
 
 import com.studioz.backend.model.Order;
 import com.studioz.backend.repository.UserRepository;
+import com.studioz.backend.service.ContactService;
 import com.studioz.backend.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import java.util.Map;
 public class AdminController {
     private final OrderService orderService;
     private final UserRepository userRepository;
+    private final ContactService contactService;
 
     @GetMapping("/orders")
     public Map<String, Object> getAllOrders(
@@ -71,6 +73,18 @@ public class AdminController {
 
         response.putAll(stats);
 
+        return response;
+    }
+
+    @GetMapping("/contacts")
+    public Map<String, Object> getContacts(
+            @RequestHeader("X-User-Email") String email
+    ) {
+        validateAdmin(email);
+        Map<String, Object> response = new HashMap<>();
+        response.put("ok", true);
+        response.put("contacts",
+                contactService.getAllContacts());
         return response;
     }
 
