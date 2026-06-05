@@ -23,7 +23,10 @@
   };
 
   // expose API base so other modules can call the same backend
-  window.API_BASE_URL = "http://localhost:8080";
+  // Use an empty string by default so the frontend uses relative paths
+  // (works when the static files are served from the same origin as the API).
+  // Developers can still override at runtime with window.API_BASE_URL = 'http://host:port'
+  window.API_BASE_URL = "";
 
   async function api(path, method, body) {
     var opts = { method: method || "GET", headers: {} };

@@ -16,7 +16,7 @@ const STUDIOZ_CSP = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com",
   "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data: blob: https:",
-  "connect-src 'self'",
+  "connect-src 'self' http://localhost:8080",,
 ].join("; ");
 
 app.use(function setContentSecurityPolicy(req, res, next) {
