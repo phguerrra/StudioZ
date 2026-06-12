@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-labelledby="title desc">
+  <title id="title">Garrafa termica personalizada</title>
+  <desc id="desc">Garrafa termica azul com faixa personalizada.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ecfeff"/>
+      <stop offset="0.6" stop-color="#f8fafc"/>
+      <stop offset="1" stop-color="#ffe4e6"/>
+    </linearGradient>
+    <linearGradient id="bottle" x1="0" x2="1">
+      <stop offset="0" stop-color="#2563eb"/>
+      <stop offset="0.45" stop-color="#60a5fa"/>
+      <stop offset="1" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="24" stdDeviation="18" flood-color="#0f172a" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <ellipse cx="400" cy="506" rx="205" ry="40" fill="#0f172a" opacity="0.1"/>
+  <g filter="url(#shadow)">
+    <path d="M342 88h116v54c0 28 26 43 42 68 20 31 22 76 18 123l-11 124c-5 53-50 94-104 94h-6c-54 0-99-41-104-94l-11-124c-4-47-2-92 18-123 16-25 42-40 42-68V88z" fill="url(#bottle)"/>
+    <rect x="327" y="52" width="146" height="56" rx="18" fill="#1e293b"/>
+    <rect x="339" y="114" width="122" height="32" rx="12" fill="#1e40af"/>
+    <rect x="310" y="292" width="180" height="96" rx="22" fill="#ffffff" opacity="0.94"/>
+    <path d="M348 340h104" stroke="#ff4fa3" stroke-width="18" stroke-linecap="round"/>
+    <path d="M371 367h58" stroke="#3b82f6" stroke-width="12" stroke-linecap="round"/>
+  </g>
+</svg>

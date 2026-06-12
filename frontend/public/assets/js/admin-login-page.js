@@ -5,8 +5,9 @@
   if (!form) return;
 
   if (window.AdminAuth && window.AdminAuth.isLoggedIn()) {
-    window.location.href = "admin.html";
-    return;
+    window.AdminAuth.validateSession().then(function (session) {
+      if (session.ok) window.location.href = "admin.html";
+    });
   }
 
   form.addEventListener("submit", async function (e) {
@@ -34,9 +35,14 @@
       if (window.showToast) window.showToast(result.message || "Erro no login admin.", "error");
       return;
     }
+
+    var session = await window.AdminAuth.validateSession();
+    if (!session.ok) {
+      if (window.showToast) window.showToast(session.message || "Login aceito, mas a sessão admin não foi validada.", "error");
+      return;
+    }
+
     if (window.showToast) window.showToast("Login administrativo realizado.", "success");
-    setTimeout(function () {
-      window.location.href = "admin.html";
-    }, 500);
+    window.location.assign("admin.html");
   });
 })();

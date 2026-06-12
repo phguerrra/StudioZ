@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Admin — Studio Z</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body>
+    <div class="admin-shell">
+      <aside class="admin-aside">
+        <div class="admin-brand">Studio <span>Z</span> Admin</div>
+        <div class="admin-meta" id="adminIdentity">Administrador</div>
+        <nav class="admin-nav">
+          <a href="#visao-geral" class="active" data-tab-target="overview"><i class="fas fa-chart-line"></i> Visão geral</a>
+          <a href="#pedidos" data-tab-target="orders"><i class="fas fa-box"></i> Pedidos</a>
+          <a href="#precos" data-tab-target="prices"><i class="fas fa-tags"></i> Preços</a>
+          <a href="#contatos" data-tab-target="contacts"><i class="fas fa-envelope"></i> Contatos</a>
+        </nav>
+        <button id="adminLogoutBtn" class="btn btn-outline btn-block" style="margin-top: 1rem">
+          <i class="fas fa-right-from-bracket"></i> Sair
+        </button>
+      </aside>
+
+      <main class="admin-main">
+        <div class="admin-top">
+          <div>
+            <span class="admin-eyebrow">Operação Studio Z</span>
+            <h1>Dashboard Administrativo</h1>
+            <p>Acompanhe pedidos, receita, pendências e preços em um só lugar.</p>
+          </div>
+          <div class="admin-top-actions">
+            <button id="reloadAdminBtn" class="btn btn-blue btn-small">
+              <i class="fas fa-rotate"></i> Atualizar
+            </button>
+          </div>
+        </div>
+
+        <nav class="admin-tabs" aria-label="Seções do dashboard">
+          <button type="button" class="admin-tab active" data-admin-tab="overview"><i class="fas fa-chart-pie"></i> Visão geral</button>
+          <button type="button" class="admin-tab" data-admin-tab="orders"><i class="fas fa-box"></i> Pedidos</button>
+          <button type="button" class="admin-tab" data-admin-tab="prices"><i class="fas fa-tags"></i> Preços</button>
+          <button type="button" class="admin-tab" data-admin-tab="contacts"><i class="fas fa-envelope"></i> Contatos</button>
+        </nav>
+
+        <section class="admin-tab-panel active" data-admin-panel="overview" id="visao-geral">
+          <div class="kpi-grid">
+            <article class="kpi-card kpi-primary" data-tab-target="orders">
+              <div class="kpi-icon"><i class="fas fa-box"></i></div>
+              <div class="label">Total de pedidos</div>
+              <div class="value" id="kpiTotalOrders">0</div>
+              <div class="kpi-note">Todos os pedidos registrados</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-icon"><i class="fas fa-calendar-day"></i></div>
+              <div class="label">Pedidos hoje</div>
+              <div class="value" id="kpiTodayOrders">0</div>
+              <div class="kpi-note">Entradas do dia</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-icon"><i class="fas fa-chart-line"></i></div>
+              <div class="label">Faturamento estimado</div>
+              <div class="value" id="kpiRevenue">R$ 0,00</div>
+              <div class="kpi-note">Soma dos pedidos</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-icon"><i class="fas fa-receipt"></i></div>
+              <div class="label">Ticket médio</div>
+              <div class="value" id="kpiAverageTicket">R$ 0,00</div>
+              <div class="kpi-note">Receita por pedido</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-icon"><i class="fas fa-users"></i></div>
+              <div class="label">Clientes cadastrados</div>
+              <div class="value" id="kpiUsers">0</div>
+              <div class="kpi-note">Base de clientes</div>
+            </article>
+            <article class="kpi-card">
+              <div class="kpi-icon"><i class="fas fa-envelope"></i></div>
+              <div class="label">Mensagens de contato</div>
+              <div class="value" id="kpiContacts">0</div>
+              <div class="kpi-note">Total recebido</div>
+            </article>
+          </div>
+
+          <section class="admin-dashboard-grid">
+            <article class="admin-section-card admin-chart-card">
+              <div class="admin-section-head">
+                <div>
+                  <span class="admin-eyebrow">Principal</span>
+                  <h2>Vendas dos últimos 7 dias</h2>
+                </div>
+              </div>
+              <canvas id="adminSalesChart" width="760" height="280" aria-label="Gráfico de vendas"></canvas>
+            </article>
+
+            <article class="admin-section-card">
+              <div class="admin-section-head">
+                <div>
+                  <span class="admin-eyebrow">Fluxo</span>
+                  <h2>Status dos pedidos</h2>
+                </div>
+              </div>
+              <div class="status-flow">
+                <button class="status-step" type="button" data-tab-target="orders">
+                  <span>Em análise</span>
+                  <strong id="kpiAnalise">0</strong>
+                </button>
+                <button class="status-step" type="button" data-tab-target="orders">
+                  <span>Em produção</span>
+                  <strong id="kpiProducao">0</strong>
+                </button>
+                <button class="status-step" type="button" data-tab-target="orders">
+                  <span>Pronto</span>
+                  <strong id="kpiPronto">0</strong>
+                </button>
+                <button class="status-step" type="button" data-tab-target="orders">
+                  <span>Entregue</span>
+                  <strong id="kpiEntregue">0</strong>
+                </button>
+              </div>
+            </article>
+          </section>
+
+          <section class="admin-dashboard-grid">
+            <article class="admin-section-card admin-alert-card">
+              <div class="admin-section-head">
+                <div>
+                  <span class="admin-eyebrow">Atenção</span>
+                  <h2>Alertas operacionais</h2>
+                </div>
+                <i class="fas fa-triangle-exclamation"></i>
+              </div>
+              <div id="adminAlertsList" class="admin-alert-list"></div>
+            </article>
+
+            <article class="admin-section-card">
+              <div class="admin-section-head">
+                <div>
+                  <span class="admin-eyebrow">Produtos</span>
+                  <h2>Mais pedidos</h2>
+                </div>
+              </div>
+              <div id="adminTopProducts" class="admin-ranking"></div>
+            </article>
+          </section>
+        </section>
+
+        <section class="admin-tab-panel" data-admin-panel="orders" id="pedidos">
+          <article class="admin-section-card">
+            <div class="admin-section-head">
+              <div>
+                <span class="admin-eyebrow">Operação</span>
+                <h2>Pedidos recentes</h2>
+              </div>
+              <span class="admin-count" id="ordersCountLabel">0 pedidos</span>
+            </div>
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Produto</th>
+                    <th>Preço</th>
+                    <th>Status</th>
+                    <th>Data</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="adminOrdersBody"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <section class="admin-tab-panel" data-admin-panel="prices" id="precos">
+          <article class="admin-section-card">
+            <div class="admin-section-head">
+              <div>
+                <span class="admin-eyebrow">Catálogo</span>
+                <h2>Preços base</h2>
+              </div>
+            </div>
+            <p class="section-sub" style="text-align: left; margin: 0 0 1rem; max-width: none">
+              Estes valores são usados na tela de personalização para calcular o preço estimado.
+            </p>
+            <div class="admin-table-wrap">
+              <table class="admin-table" style="min-width: 520px">
+                <thead>
+                  <tr>
+                    <th>Produto</th>
+                    <th>Chave</th>
+                    <th>Preço base</th>
+                    <th>Atualizado</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="adminPricesBody"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <section class="admin-tab-panel" data-admin-panel="contacts" id="contatos">
+          <article class="admin-section-card">
+            <div class="admin-section-head">
+              <div>
+                <span class="admin-eyebrow">Relacionamento</span>
+                <h2>Últimos contatos</h2>
+              </div>
+              <span class="admin-count" id="contactsCountLabel">0 mensagens</span>
+            </div>
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Mensagem</th>
+                    <th>Data</th>
+                  </tr>
+                </thead>
+                <tbody id="adminContactsBody"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <div id="adminModal" style="display: none"></div>
+
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/admin-auth.js"></script>
+    <script src="assets/js/admin-dashboard.js"></script>
+  </body>
+</html>

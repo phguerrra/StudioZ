@@ -7,12 +7,27 @@
       opts.headers["Content-Type"] = "application/json";
       opts.body = JSON.stringify(body);
     }
-    var res = await fetch(path, opts);
-    var data;
+    var res;
     try {
-      data = await res.json();
+      res = await fetch(path, opts);
     } catch (e) {
-      data = { ok: false, message: "Erro de comunicação com o servidor." };
+      return { ok: false, message: "Não foi possível conectar ao servidor. Verifique se o backend está rodando." };
+    }
+
+    var raw = "";
+    try {
+      raw = await res.text();
+    } catch (e) {
+      return { ok: false, message: "Erro ao ler a resposta do servidor." };
+    }
+
+    var data = {};
+    if (raw) {
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        return { ok: false, message: "O servidor respondeu em um formato inválido." };
+      }
     }
     if (!res.ok) return { ok: false, message: data.message || "Erro no servidor." };
     return data;

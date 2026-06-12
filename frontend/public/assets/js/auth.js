@@ -22,29 +22,42 @@
     }
   };
 
-  var API_BASE_URL = "http://localhost:8080";
-
   async function api(path, method, body) {
     var opts = { method: method || "GET", headers: {} };
     if (body) {
       opts.headers["Content-Type"] = "application/json";
       opts.body = JSON.stringify(body);
     }
-    var res = await fetch(API_BASE_URL + path, opts);
-    var data;
+    var res;
     try {
-      data = await res.json();
+      res = await fetch(path, opts);
     } catch (e) {
-      data = { ok: false, message: "Erro de comunicação com o servidor." };
+      return { ok: false, message: "Não foi possível conectar ao servidor. Verifique se o backend está rodando." };
     }
-    if (!res.ok) {
+
+    var raw = "";
+    try {
+      raw = await res.text();
+    } catch (e) {
+      return { ok: false, message: "Erro ao ler a resposta do servidor." };
+    }
+
+    var data = {};
+    if (raw) {
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {
+        return { ok: false, message: "O servidor respondeu em um formato inválido." };
+      }
+    }
+    if (!res.ok || data.ok === false) {
       return { ok: false, message: data.message || "Erro no servidor." };
     }
-    return { ok: true, user: data };
+    return data;
   }
 
   window.registerUser = async function (name, email, password) {
-    return api("/auth/register", "POST", {
+    return api("/api/auth/register", "POST", {
       name: name.trim(),
       email: email.trim().toLowerCase(),
       password: password,
@@ -52,7 +65,7 @@
   };
 
   window.loginUser = async function (email, password) {
-    var result = await api("/auth/login", "POST", {
+    var result = await api("/api/auth/login", "POST", {
       email: email.trim().toLowerCase(),
       password: password,
     });

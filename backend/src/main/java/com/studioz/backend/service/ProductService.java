@@ -23,6 +23,16 @@ public class ProductService {
         return productRepository.save(product);
     }
 
+    public Product upsert(ProductDTO dto) {
+        Product product = productRepository.findByProductKey(dto.productKey)
+                .orElseGet(Product::new);
+        product.setProductKey(dto.productKey);
+        product.setProductName(dto.productName);
+        product.setBasePrice(dto.basePrice);
+
+        return productRepository.save(product);
+    }
+
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }

@@ -59,6 +59,28 @@ O sistema segue o modelo Cliente-Servidor, utilizando:
 - Banco de dados: armazenamento de usuários, pedidos e produtos
 - Docker: containerização da aplicação
 
+Estrutura principal do frontend:
+
+```text
+frontend/
+├── public/              # Páginas e arquivos servidos ao navegador
+│   └── assets/
+│       ├── css/         # Estilos
+│       └── js/          # Scripts do cliente
+├── src/                 # Servidor Node/Express
+├── data/                # Banco SQLite e dados locais de execução
+├── Dockerfile
+├── docker-compose.yml
+└── package.json
+```
+
+Para executar localmente:
+
+```bash
+npm install
+npm start
+```
+
 Fluxo do sistema:
 1. O cliente cria uma conta
 2. O cliente faz login

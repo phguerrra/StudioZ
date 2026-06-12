@@ -4,9 +4,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleResponseStatusException(ResponseStatusException ex) {
+        int status = ex.getStatusCode().value();
+        ErrorResponse error = new ErrorResponse(
+                "Erro na requisição",
+                ex.getReason(),
+                status
+        );
+        return ResponseEntity.status(ex.getStatusCode()).body(error);
+    }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex) {
@@ -29,7 +41,7 @@ public class GlobalExceptionHandler {
     }
 
     public static class ErrorResponse {
-        public String ok = "false";
+        public boolean ok = false;
         public String error;
         public String message;
         public int status;
@@ -40,7 +52,7 @@ public class GlobalExceptionHandler {
             this.status = status;
         }
 
-        public String getOk() {
+        public boolean getOk() {
             return ok;
         }
 
@@ -57,4 +69,3 @@ public class GlobalExceptionHandler {
         }
     }
 }
-

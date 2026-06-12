@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Personalizar — Studio Z</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:wght@600&family=Pacifico&family=Dancing+Script:wght@600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link rel="stylesheet" href="assets/css/styles.css" />
+    <!--
+      Three.js: use APENAS import map + assets/js/personalizar.js com type="module".
+      NÃO adicione <script src=".../three.min.js"> nem .../examples/js/controls/OrbitControls.js>
+      (caminho legacy 404 + MIME text/plain; OrbitControls vem de examples/jsm via ESM).
+    -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="index.html" class="logo">Studio <span>Z</span></a>
+        <button type="button" class="nav-toggle" aria-label="Abrir menu">
+          <i class="fas fa-bars"></i>
+        </button>
+        <nav class="main-nav" aria-label="Principal">
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="produtos.html">Produtos</a></li>
+            <li><a href="personalizar.html">Personalizar</a></li>
+            <li><a href="pedidos.html">Meus Pedidos</a></li>
+            <li><a href="login.html" class="nav-cta secondary">Login</a></li>
+            <li><a href="cadastro.html" class="nav-cta">Cadastro</a></li>
+            <li><a href="contato.html">Contato</a></li>
+            <li id="navUserSlot"></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main class="form-page">
+      <section class="page-hero" style="padding-bottom: 0">
+        <div class="container">
+          <h1>Personalize seu produto</h1>
+          <p>Preencha os dados, envie sua imagem e gere a prévia antes de finalizar.</p>
+        </div>
+      </section>
+
+      <div class="container">
+        <div class="personalize-layout">
+          <form id="personalizeForm" class="form-card wide personalize-form" novalidate>
+            <div class="config-section">
+              <div class="config-section-head">
+                <span>01</span>
+                <h2>Produto</h2>
+              </div>
+              <div class="form-grid-2">
+                <div class="form-group">
+                  <label for="productSelect">Produto</label>
+                  <select id="productSelect" name="product">
+                    <option value="caneca">Caneca de café</option>
+                    <option value="copo_termico">Copo térmico estilo Stanley</option>
+                    <option value="garrafa">Garrafa térmica</option>
+                    <option value="copo_pers">Xícara de café</option>
+                  </select>
+                </div>
+
+                <div class="form-group color-field">
+                  <label for="productColor">Cor do produto</label>
+                  <input type="color" id="productColor" name="color" value="#cbd5e1" />
+                </div>
+              </div>
+            </div>
+
+            <div class="config-section">
+              <div class="config-section-head">
+                <span>02</span>
+                <h2>Arte</h2>
+              </div>
+              <div class="form-group" id="imageUploadGroup">
+                <label for="imageUpload">Imagem (PNG, JPG ou WebP - max. 4 MB)</label>
+                <input type="file" id="imageUpload" name="image" accept="image/png,image/jpeg,image/webp" />
+                <span class="error-msg">Envie uma imagem válida.</span>
+              </div>
+
+              <div class="form-group">
+                <label for="positionSelect">Posição da arte</label>
+                <select id="positionSelect" name="position">
+                  <option value="center">Centro</option>
+                  <option value="left">Esquerda</option>
+                  <option value="right">Direita</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="config-section">
+              <div class="config-section-head">
+                <span>03</span>
+                <h2>Texto</h2>
+              </div>
+              <div class="form-group">
+                <label for="customText">Texto na peça</label>
+                <textarea id="customText" name="text" rows="3" maxlength="200" placeholder="Sua frase ou nome"></textarea>
+                <span class="error-msg">Texto muito longo.</span>
+              </div>
+
+              <div class="form-group">
+                <label for="fontSelect">Fonte do texto</label>
+                <select id="fontSelect" name="font">
+                  <option value="Outfit">Outfit (moderna)</option>
+                  <option value="Playfair Display">Playfair (elegante)</option>
+                  <option value="Pacifico">Pacifico (casual)</option>
+                  <option value="Dancing Script">Dancing Script (manuscrita)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="personalize-actions">
+              <button type="button" id="btnPreview" class="btn btn-blue">
+                <i class="fas fa-eye"></i> Gerar prévia
+              </button>
+              <button type="button" id="btnFinalize" class="btn btn-pink">
+                <i class="fas fa-check"></i> Finalizar pedido
+              </button>
+            </div>
+          </form>
+
+          <aside class="preview-panel">
+            <div class="preview-head">
+              <h3><i class="fas fa-mug-hot" style="color: var(--pink)"></i> Pré-visualização</h3>
+              <span>3D</span>
+            </div>
+            <canvas id="previewCanvas" width="320" height="360" aria-label="Prévia da caneca"></canvas>
+            <div class="price-box">
+              <div class="label">Valor estimado</div>
+              <div class="value" id="priceValue">R$ 0,00</div>
+            </div>
+            <div class="preview-tools" aria-label="Controles da pré-visualização">
+              <div class="preview-mode" role="group" aria-label="Modo de edição">
+                <button type="button" class="preview-mode-btn active" data-preview-mode="image">
+                  <i class="fas fa-image"></i> Imagem
+                </button>
+                <button type="button" class="preview-mode-btn" data-preview-mode="text">
+                  <i class="fas fa-font"></i> Texto
+                </button>
+                <button type="button" class="preview-mode-btn" data-preview-mode="product">
+                  <i class="fas fa-rotate"></i> Produto
+                </button>
+              </div>
+              <div class="preview-control-group" data-control-target="image">
+                <label for="imageOffsetX">Imagem para os lados</label>
+                <input type="range" id="imageOffsetX" min="0.08" max="0.92" step="0.01" value="0.5" />
+                <label for="imageOffsetY">Imagem para cima/baixo</label>
+                <input type="range" id="imageOffsetY" min="0.08" max="0.92" step="0.01" value="0.38" />
+                <label for="imageScale">Tamanho da imagem</label>
+                <input type="range" id="imageScale" min="0.45" max="2.2" step="0.01" value="1" />
+              </div>
+              <div class="preview-control-group is-hidden" data-control-target="text">
+                <label for="textOffsetX">Texto para os lados</label>
+                <input type="range" id="textOffsetX" min="0.08" max="0.92" step="0.01" value="0.5" />
+                <label for="textOffsetY">Texto para cima/baixo</label>
+                <input type="range" id="textOffsetY" min="0.08" max="0.92" step="0.01" value="0.74" />
+                <label for="textScale">Tamanho do texto</label>
+                <input type="range" id="textScale" min="0.55" max="1.8" step="0.01" value="1" />
+              </div>
+              <div class="preview-control-group is-hidden" data-control-target="product">
+                <label for="productRotation">Girar produto</label>
+                <input type="range" id="productRotation" min="-3.14" max="3.14" step="0.01" value="0" />
+                <label for="productZoom">Zoom do produto</label>
+                <input type="range" id="productZoom" min="0.75" max="1.7" step="0.01" value="1" />
+              </div>
+              <button type="button" id="resetPreviewEdit" class="btn btn-outline btn-small preview-reset">
+                <i class="fas fa-rotate-left"></i> Resetar ajuste
+              </button>
+            </div>
+            <p class="form-hint" style="text-align: center">
+              No modo Produto, arraste para girar e use a roda do mouse para aproximar.
+            </p>
+          </aside>
+        </div>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <div class="logo">Studio <span>Z</span></div>
+            <p>Personalização de produtos térmicos com qualidade e criatividade.</p>
+          </div>
+          <div class="footer-col">
+            <h4>Contato</h4>
+            <p><i class="fas fa-phone" style="color: var(--blue)"></i> +55 55 9921-1897</p>
+            <p><i class="fas fa-envelope" style="color: var(--pink)"></i> contato@studioz.com.br</p>
+          </div>
+          <div class="footer-col">
+            <h4>Redes</h4>
+            <div class="social-links">
+              <a href="https://www.instagram.com/studiozpersonalizados_/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"
+                ><i class="fab fa-instagram"></i
+              ></a>
+              <a href="https://wa.me/555599211897" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"
+                ><i class="fab fa-whatsapp"></i
+              ></a>
+            </div>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          © <span id="year"></span> Studio Z. Todos os direitos reservados.
+        </div>
+      </div>
+    </footer>
+
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/orders.js"></script>
+    <script src="assets/js/nav-user.js"></script>
+    <!-- ?v= força novo fetch se o navegador ainda tiver HTML antigo com three.min + OrbitControls legacy -->
+    <script type="module" src="assets/js/personalizar.js?v=11"></script>
+    <script>
+      document.getElementById("year").textContent = new Date().getFullYear();
+    </script>
+  </body>
+</html>

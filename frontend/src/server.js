@@ -1,4 +1,5 @@
 const express = require("express");
+const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
@@ -14,7 +15,7 @@ const STUDIOZ_CSP = [
   "object-src 'none'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com",
-  "font-src 'self' https://fonts.gstatic.com data:",
+  "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:",
   "img-src 'self' data: blob: https:",
   "connect-src 'self'",
 ].join("; ");
@@ -26,7 +27,8 @@ app.use(function setContentSecurityPolicy(req, res, next) {
 
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || "0.0.0.0";
-const dataDir = process.env.DATA_DIR || __dirname;
+const publicDir = path.join(__dirname, "..", "public");
+const dataDir = process.env.DATA_DIR || path.join(__dirname, "..", "data");
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
 }
@@ -34,12 +36,13 @@ const dbPath = path.join(dataDir, "studioz.db");
 const db = new sqlite3.Database(dbPath);
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@studioz.com";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
-const adminTokens = new Set();
+const ADMIN_TOKEN_TTL_MS = Number(process.env.ADMIN_TOKEN_TTL_MS || 1000 * 60 * 60 * 8);
+const adminTokens = new Map();
 
 app.use(express.json({ limit: "8mb" }));
 app.use(express.urlencoded({ extended: false }));
 app.use(
-  express.static(__dirname, {
+  express.static(publicDir, {
     setHeaders(res, filePath) {
       if (filePath.endsWith(".html")) {
         res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
@@ -76,14 +79,34 @@ function all(sql, params = []) {
 }
 
 function createAdminToken() {
-  return `adm_${Date.now()}_${Math.random().toString(36).slice(2, 12)}`;
+  return `adm_${crypto.randomBytes(32).toString("hex")}`;
+}
+
+function createAdminSession() {
+  const token = createAdminToken();
+  const expiresAt = Date.now() + ADMIN_TOKEN_TTL_MS;
+  adminTokens.set(token, { email: ADMIN_EMAIL, role: "Administrador", expiresAt });
+  return { token, expiresAt };
+}
+
+function getAdminSession(req) {
+  const token = String(req.headers["x-admin-token"] || "");
+  if (!token) return null;
+  const session = adminTokens.get(token);
+  if (!session) return null;
+  if (session.expiresAt <= Date.now()) {
+    adminTokens.delete(token);
+    return null;
+  }
+  return { token, ...session };
 }
 
 function requireAdmin(req, res, next) {
-  const token = String(req.headers["x-admin-token"] || "");
-  if (!token || !adminTokens.has(token)) {
+  const session = getAdminSession(req);
+  if (!session) {
     return res.status(401).json({ ok: false, message: "Acesso administrativo não autorizado." });
   }
+  req.admin = session;
   return next();
 }
 
@@ -216,13 +239,26 @@ app.post("/api/admin/login", (req, res) => {
   if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
     return res.status(401).json({ ok: false, message: "Credenciais de administrador inválidas." });
   }
-  const token = createAdminToken();
-  adminTokens.add(token);
+  const session = createAdminSession();
   return res.json({
     ok: true,
-    token,
+    token: session.token,
+    expiresAt: session.expiresAt,
     admin: { email: ADMIN_EMAIL, role: "Administrador" },
   });
+});
+
+app.get("/api/admin/session", requireAdmin, (req, res) => {
+  return res.json({
+    ok: true,
+    admin: { email: req.admin.email, role: req.admin.role },
+    expiresAt: req.admin.expiresAt,
+  });
+});
+
+app.post("/api/admin/logout", requireAdmin, (req, res) => {
+  adminTokens.delete(req.admin.token);
+  return res.json({ ok: true });
 });
 
 app.post("/api/orders", async (req, res) => {
@@ -420,6 +456,21 @@ app.patch("/api/admin/orders/:id", requireAdmin, async (req, res) => {
   }
 });
 
+app.delete("/api/admin/orders/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ ok: false, message: "ID inválido." });
+
+    const result = await run("DELETE FROM orders WHERE id = ?", [id]);
+    if (!result.changes) {
+      return res.status(404).json({ ok: false, message: "Pedido não encontrado." });
+    }
+    return res.json({ ok: true });
+  } catch (error) {
+    return res.status(500).json({ ok: false, message: "Erro ao excluir pedido." });
+  }
+});
+
 app.patch("/api/admin/orders/:id/status", requireAdmin, async (req, res) => {
   try {
     const id = Number(req.params.id);
@@ -452,18 +503,23 @@ app.get("/api/admin/prices", requireAdmin, async (_req, res) => {
 app.put("/api/admin/prices/:productKey", requireAdmin, async (req, res) => {
   try {
     const productKey = String(req.params.productKey || "").trim();
+    const productName = String(req.body.productName || productKey).trim();
     const basePrice = Number(req.body.basePrice);
     if (!productKey) return res.status(400).json({ ok: false, message: "Produto inválido." });
     if (!Number.isFinite(basePrice) || basePrice < 0) {
       return res.status(400).json({ ok: false, message: "Preço base inválido." });
     }
     const now = new Date().toISOString();
-    const result = await run(
-      "UPDATE product_prices SET base_price = ?, updated_at = ? WHERE product_key = ?",
-      [basePrice, now, productKey]
+    await run(
+      `INSERT INTO product_prices (product_key, product_name, base_price, updated_at)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT(product_key) DO UPDATE SET
+         product_name = excluded.product_name,
+         base_price = excluded.base_price,
+         updated_at = excluded.updated_at`,
+      [productKey, productName, basePrice, now]
     );
-    if (!result.changes) return res.status(404).json({ ok: false, message: "Produto não encontrado." });
-    return res.json({ ok: true });
+    return res.json({ ok: true, price: { productKey, productName, basePrice, updatedAt: now } });
   } catch (error) {
     return res.status(500).json({ ok: false, message: "Erro ao atualizar preço." });
   }
@@ -505,7 +561,7 @@ app.post("/api/contact", async (req, res) => {
 });
 
 app.get("*", (_req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+  res.sendFile(path.join(publicDir, "index.html"));
 });
 
 initDb()

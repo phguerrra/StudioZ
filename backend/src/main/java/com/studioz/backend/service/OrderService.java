@@ -54,4 +54,11 @@ public class OrderService {
         order.setStatus(status);
         return orderRepository.save(order);
     }
+
+    public void delete(Long id) {
+        if (!orderRepository.existsById(id)) {
+            throw new RuntimeException("Pedido não encontrado");
+        }
+        orderRepository.deleteById(id);
+    }
 }
