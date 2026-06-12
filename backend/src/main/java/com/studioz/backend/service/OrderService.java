@@ -6,7 +6,10 @@ import com.studioz.backend.model.Order;
 import com.studioz.backend.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -55,10 +58,55 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
-    public void delete(Long id) {
-        if (!orderRepository.existsById(id)) {
-            throw new RuntimeException("Pedido não encontrado");
+    public Map<String, Object> getStats() {
+
+        List<Order> orders = orderRepository.findAll();
+
+        long totalOrders = orders.size();
+
+        long pendingOrders =
+                orderRepository.countByStatus("EM_ANALISE");
+
+        long completedOrders =
+                orderRepository.countByStatus("FINALIZADO");
+
+        double totalRevenue = orders.stream()
+                .mapToDouble(order ->
+                        order.getPrice() != null
+                                ? order.getPrice()
+                                : 0
+                )
+                .sum();
+
+        Map<String, Object> stats =
+                new HashMap<>();
+
+        stats.put("totalOrders", totalOrders);
+        stats.put("pendingOrders", pendingOrders);
+        stats.put("completedOrders", completedOrders);
+        stats.put("totalRevenue", totalRevenue);
+
+        return stats;
+    }
+
+    public Order getOrderById(Long id) {
+        return orderRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Pedido não encontrado"));
+    }
+
+    public Order updateOrder(Long id, Double price, String status) {
+
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Pedido não encontrado"));
+
+        if (price != null) {
+            order.setPrice(price);
         }
-        orderRepository.deleteById(id);
+        if (status != null && !status.isBlank()) {
+            order.setStatus(status);
+        }
+        return orderRepository.save(order);
     }
 }
